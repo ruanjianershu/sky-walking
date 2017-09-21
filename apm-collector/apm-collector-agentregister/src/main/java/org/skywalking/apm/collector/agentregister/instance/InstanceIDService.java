@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * 是对
  * @author pengys5
  */
 public class InstanceIDService {

@@ -9,7 +9,7 @@ import org.skywalking.apm.collector.core.framework.Listener;
  */
 public abstract class ClusterDataListener implements Listener {
 
-    private Set<String> addresses;
+    private HashSet<String> addresses;
 
     public ClusterDataListener() {
         addresses = new HashSet<>();

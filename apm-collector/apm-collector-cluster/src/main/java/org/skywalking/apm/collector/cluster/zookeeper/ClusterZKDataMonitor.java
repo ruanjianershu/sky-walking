@@ -1,9 +1,7 @@
 package org.skywalking.apm.collector.cluster.zookeeper;
 
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+
 import org.apache.zookeeper.CreateMode;
 import org.apache.zookeeper.WatchedEvent;
 import org.apache.zookeeper.Watcher;
@@ -42,24 +40,40 @@ public class ClusterZKDataMonitor implements DataMonitor, Watcher {
 
     @Override public void process(WatchedEvent event) {
         logger.info("changed path {}, event type: {}", event.getPath(), event.getType().name());
+        /**
+         * 实际上是只监听特定的几个节点变更事件
+         * /skywalking/ui/jetty
+         * /skywalking/agent_server/jetty
+         * /skywalking/agent_stream/grpc
+         * /skywalking/agent_stream/jetty
+         * /skywalking/collector_inside/grpc
+         */
         if (listeners.containsKey(event.getPath())) {
             List<String> paths;
             try {
                 paths = client.getChildren(event.getPath(), true);
+                ClusterDataListener listener = listeners.get(event.getPath());
+                Set<String> remoteNodes = new HashSet<String>();
+                Set<String> notifiedNodes = listener.getAddresses();
                 if (CollectionUtils.isNotEmpty(paths)) {
                     for (String serverPath : paths) {
                         Stat stat = new Stat();
                         byte[] data = client.getData(event.getPath() + "/" + serverPath, true, stat);
                         String dataStr = new String(data);
-                        if (stat.getCzxid() == stat.getMzxid()) {
+                        String addressValue = serverPath + dataStr;
+                        remoteNodes.add(addressValue);
+                        if (!notifiedNodes.contains(addressValue)) {
                             logger.info("path children has been created, path: {}, data: {}", event.getPath() + "/" + serverPath, dataStr);
-                            listeners.get(event.getPath()).addAddress(serverPath + dataStr);
-                            listeners.get(event.getPath()).serverJoinNotify(serverPath + dataStr);
-                        } else {
-                            logger.info("path children has been changed, path: {}, data: {}", event.getPath() + "/" + serverPath, dataStr);
-                            listeners.get(event.getPath()).removeAddress(serverPath + dataStr);
-                            listeners.get(event.getPath()).serverQuitNotify(serverPath + dataStr);
+                            listener.addAddress(addressValue);
+                            listener.serverJoinNotify(addressValue);
                         }
+                    }
+                }
+                for (String address : notifiedNodes) {
+                    if (remoteNodes.isEmpty() || !remoteNodes.contains(address)) {
+                        logger.info("path children has been changed, path and data: {}", event.getPath() + "/" + address);
+                        listener.removeAddress(address);
+                        listener.serverQuitNotify(address);
                     }
                 }
             } catch (ZookeeperClientException e) {
@@ -81,7 +95,7 @@ public class ClusterZKDataMonitor implements DataMonitor, Watcher {
             ModuleRegistration.Value value = next.getValue().buildValue();
             String contextPath = value.getContextPath() == null ? "" : value.getContextPath();
 
-            client.getChildren(next.getKey(), true);
+            List<String> children=client.getChildren(next.getKey(), true);
             String serverPath = next.getKey() + "/" + value.getHostPort();
 
             if (client.exists(serverPath, false) == null) {

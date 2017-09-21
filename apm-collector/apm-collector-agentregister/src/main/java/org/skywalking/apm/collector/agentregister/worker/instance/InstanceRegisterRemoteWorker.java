@@ -28,6 +28,9 @@ public class InstanceRegisterRemoteWorker extends AbstractRemoteWorker {
     }
 
     @Override protected void onWork(Object message) throws WorkerException {
+        for(StackTraceElement e:Thread.currentThread().getStackTrace()){
+            System.out.println("ApplicationRegisterRemoteWorker "+e.getClassName()+"  "+e.getMethodName()+"   "+e.getLineNumber());
+        }
         InstanceDataDefine.Instance instance = (InstanceDataDefine.Instance)message;
         logger.debug("application id: {}, agentUUID: {}, register time: {}", instance.getApplicationId(), instance.getAgentUUID(), instance.getRegisterTime());
         getClusterContext().lookup(InstanceRegisterSerialWorker.WorkerRole.INSTANCE).tell(instance);

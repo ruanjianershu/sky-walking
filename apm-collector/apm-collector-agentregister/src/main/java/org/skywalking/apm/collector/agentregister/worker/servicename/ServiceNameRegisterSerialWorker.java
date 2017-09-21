@@ -33,6 +33,9 @@ public class ServiceNameRegisterSerialWorker extends AbstractLocalAsyncWorker {
     }
 
     @Override protected void onWork(Object message) throws WorkerException {
+        for(StackTraceElement e:Thread.currentThread().getStackTrace()){
+            System.out.println("ApplicationRegisterRemoteWorker "+e.getClassName()+"  "+e.getMethodName()+"   "+e.getLineNumber());
+        }
         if (message instanceof ServiceNameDataDefine.ServiceName) {
             ServiceNameDataDefine.ServiceName serviceName = (ServiceNameDataDefine.ServiceName)message;
             logger.debug("register service name: {}, application id: {}", serviceName.getServiceName(), serviceName.getApplicationId());

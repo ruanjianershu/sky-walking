@@ -89,8 +89,9 @@ public class SegmentParse {
                 }
             }
         }
-
+        //存储Listener.build后的数据
         notifyListenerToBuild();
+        //存储Segment
         buildSegment(segmentId, segmentObject.toByteArray());
     }
 
