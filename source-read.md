@@ -1,8 +1,8 @@
-#javaAgent
+# javaAgent
 
 ---
 
-- ###代码入口    
+- ### 代码入口    
  		org.skywalking.apm.agent.SkyWalkingAgent.premain()
 		
   		初始化配置文件配置优先级-D参数>-D配置文件>jar目录配置文件>默认配置
@@ -17,7 +17,7 @@
 		中间件插件实现    apm-sniffer/apm-sdk-plugin
 		apm-application-toolkit拦截     apm-sniffer/apm-toolkit-activation
 
-- ###随代理启动服务接口:BootService
+- ### 随代理启动服务接口:BootService
 	- org.skywalking.apm.agent.core.remote.TraceSegmentServiceClient
 	
 			提交TraceSegment到收集器,如果无可用收集器就放弃提交.
@@ -62,7 +62,7 @@
 			3.提交applicationId、applicationInstanceId发送心跳
 			4.同步字典(应该是集群信息)
 			
-#collector
+# collector
 
 ---
 
@@ -128,9 +128,6 @@
      		根据策略规则启动约定的集群组件，将实现DataMonitor的类注册监听，代码调用顺序			是:ClusterModuleGroupDefine.ClusterModuleInstaller.preInstall、install、afterInstall。
      		在cluster组启动后会调用ClusterModuleInstaller.afterInstall方法，继而调用DataMonitor.start方法，上报服务。
      		从代码逻辑上看，仅实现了zookeeper上报通知，下线时并没有删除zookeeper节点，但在agent代码里有对collector是否可用做了判断.
-     		当前问题:
-               1.下线未通知
-               2.本机上线时有时拿不到zookeeper通知
 
 	- apm-collector/apm-collector-stream
 
