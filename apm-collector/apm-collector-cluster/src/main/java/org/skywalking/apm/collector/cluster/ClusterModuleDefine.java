@@ -24,6 +24,9 @@ public abstract class ClusterModuleDefine extends ModuleDefine {
 
     @Override protected void initializeOtherContext() {
         try {
+            /**
+             * 创建zookeeper客户端，并添加zookeeper监听：ClusterZKDataMonitor
+             */
             client = createClient();
             client.initialize();
             dataMonitor().setClient(client);

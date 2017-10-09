@@ -19,7 +19,9 @@ public class LocalAsyncWorkerProviderDefineLoader implements Loader<List<Abstrac
         List<AbstractLocalAsyncWorkerProvider> providers = new ArrayList<>();
         LocalWorkerProviderDefinitionFile definitionFile = new LocalWorkerProviderDefinitionFile();
         logger.info("local async worker provider definition file name: {}", definitionFile.fileName());
-
+        /**
+         * local_worker_provider.define配置的提供客户端样本信息持久化worker
+         */
         DefinitionLoader<AbstractLocalAsyncWorkerProvider> definitionLoader = DefinitionLoader.load(AbstractLocalAsyncWorkerProvider.class, definitionFile);
 
         for (AbstractLocalAsyncWorkerProvider provider : definitionLoader) {

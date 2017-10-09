@@ -23,11 +23,16 @@ public abstract class StorageModuleDefine extends ModuleDefine implements Cluste
     @Override protected void initializeOtherContext() {
         try {
             StorageModuleContext context = (StorageModuleContext)CollectorContextHelper.INSTANCE.getContext(StorageModuleGroupDefine.GROUP_NAME);
+            //创建storage客户端，从配置文件初始化数据
             Client client = createClient();
             client.initialize();
+            //绑定客户端连接到Storage上下文
             context.setClient(client);
+            //实例化DAO对象
             injectClientIntoDAO(client);
-
+            /**
+             *初始化表结构
+             */
             storageInstaller().install(client);
         } catch (ClientException | StorageException | DefineException e) {
             throw new UnexpectedException(e.getMessage());

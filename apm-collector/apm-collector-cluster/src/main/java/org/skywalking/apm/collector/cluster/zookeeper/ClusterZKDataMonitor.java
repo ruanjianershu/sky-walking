@@ -1,5 +1,6 @@
 package org.skywalking.apm.collector.cluster.zookeeper;
 
+
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -44,6 +45,14 @@ public class ClusterZKDataMonitor implements DataMonitor, Watcher {
 
     @Override public synchronized void process(WatchedEvent event) {
         logger.info("changed path {}, event type: {}", event.getPath(), event.getType().name());
+        /**
+         * 实际上是只监听特定的几个节点变更事件
+         * /skywalking/ui/jetty
+         * /skywalking/agent_server/jetty
+         * /skywalking/agent_stream/grpc
+         * /skywalking/agent_stream/jetty
+         * /skywalking/collector_inside/grpc
+         */
         if (listeners.containsKey(event.getPath())) {
             List<String> paths;
             try {
@@ -94,7 +103,7 @@ public class ClusterZKDataMonitor implements DataMonitor, Watcher {
             ModuleRegistration.Value value = next.getValue().buildValue();
             String contextPath = value.getContextPath() == null ? "" : value.getContextPath();
 
-            client.getChildren(next.getKey(), true);
+            List<String> children=client.getChildren(next.getKey(), true);
             String serverPath = next.getKey() + "/" + value.getHostPort();
 
             if (client.exists(serverPath, false) == null) {

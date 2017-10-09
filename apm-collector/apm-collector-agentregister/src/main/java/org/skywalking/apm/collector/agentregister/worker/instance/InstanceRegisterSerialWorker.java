@@ -32,6 +32,9 @@ public class InstanceRegisterSerialWorker extends AbstractLocalAsyncWorker {
     }
 
     @Override protected void onWork(Object message) throws WorkerException {
+        for(StackTraceElement e:Thread.currentThread().getStackTrace()){
+            System.out.println("ApplicationRegisterRemoteWorker "+e.getClassName()+"  "+e.getMethodName()+"   "+e.getLineNumber());
+        }
         if (message instanceof InstanceDataDefine.Instance) {
             InstanceDataDefine.Instance instance = (InstanceDataDefine.Instance)message;
             logger.debug("register instance, application id: {}, agentUUID: {}", instance.getApplicationId(), instance.getAgentUUID());

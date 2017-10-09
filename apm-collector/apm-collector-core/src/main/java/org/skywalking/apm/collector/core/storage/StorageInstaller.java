@@ -16,12 +16,18 @@ public abstract class StorageInstaller {
     public final void install(Client client) throws StorageException {
         StorageDefineLoader defineLoader = new StorageDefineLoader();
         try {
+            /**
+             * 通过storage.define查询表结构定义
+             */
             List<TableDefine> tableDefines = defineLoader.load();
+            //过滤掉非ElasticSearchTableDefine实例
             defineFilter(tableDefines);
             Boolean debug = System.getProperty("debug") != null;
 
             for (TableDefine tableDefine : tableDefines) {
+                //将字段放入columnDefines
                 tableDefine.initialize();
+                //判断表是否存在，不存在就重新初始化
                 if (!isExists(client, tableDefine)) {
                     logger.info("table: {} not exists", tableDefine.getName());
                     createTable(client, tableDefine);
