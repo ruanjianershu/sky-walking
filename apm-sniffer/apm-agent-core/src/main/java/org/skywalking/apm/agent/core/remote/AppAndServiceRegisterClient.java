@@ -6,6 +6,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import org.skywalking.apm.agent.core.boot.BootService;
+import org.skywalking.apm.agent.core.boot.DefaultNamedThreadFactory;
 import org.skywalking.apm.agent.core.boot.ServiceManager;
 import org.skywalking.apm.agent.core.conf.Config;
 import org.skywalking.apm.agent.core.conf.RemoteDownstreamConfig;
@@ -71,7 +72,7 @@ public class AppAndServiceRegisterClient implements BootService, GRPCChannelList
     @Override
     public void boot() throws Throwable {
         applicationRegisterFuture = Executors
-            .newSingleThreadScheduledExecutor()
+            .newSingleThreadScheduledExecutor(new DefaultNamedThreadFactory("AppAndServiceRegisterClient"))
             .scheduleAtFixedRate(this, 0, Config.Collector.APP_AND_SERVICE_REGISTER_CHECK_INTERVAL, TimeUnit.SECONDS);
     }
 
@@ -87,6 +88,7 @@ public class AppAndServiceRegisterClient implements BootService, GRPCChannelList
 
     @Override
     public void run() {
+        logger.debug("AppAndServiceRegisterClient running, status:{}.",status);
         if (CONNECTED.equals(status)) {
             try {
                 if (RemoteDownstreamConfig.Agent.APPLICATION_ID == DictionaryUtil.nullValue()) {
