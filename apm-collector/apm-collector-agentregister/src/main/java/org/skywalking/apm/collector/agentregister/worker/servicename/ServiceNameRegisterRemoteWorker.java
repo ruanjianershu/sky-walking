@@ -46,6 +46,9 @@ public class ServiceNameRegisterRemoteWorker extends AbstractRemoteWorker {
     }
 
     @Override protected void onWork(Object message) throws WorkerException {
+        for(StackTraceElement e:Thread.currentThread().getStackTrace()){
+            System.out.println("ApplicationRegisterRemoteWorker "+e.getClassName()+"  "+e.getMethodName()+"   "+e.getLineNumber());
+        }
         ServiceNameDataDefine.ServiceName serviceName = (ServiceNameDataDefine.ServiceName)message;
         logger.debug("service name: {}", serviceName.getServiceName());
         getClusterContext().lookup(ServiceNameRegisterSerialWorker.WorkerRole.INSTANCE).tell(serviceName);

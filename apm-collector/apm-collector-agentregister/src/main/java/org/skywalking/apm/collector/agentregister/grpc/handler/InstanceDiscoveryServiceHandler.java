@@ -55,7 +55,7 @@ public class InstanceDiscoveryServiceHandler extends InstanceDiscoveryServiceGrp
 
     @Override
     public void registerRecover(ApplicationInstanceRecover request, StreamObserver<Downstream> responseObserver) {
-        long timeBucket = TimeBucketUtils.INSTANCE.getSecondTimeBucket(request.getRegisterTime());
+            long timeBucket = TimeBucketUtils.INSTANCE.getSecondTimeBucket(request.getRegisterTime());
         instanceIDService.recover(request.getApplicationInstanceId(), request.getApplicationId(), timeBucket, buildOsInfo(request.getOsinfo()));
         responseObserver.onNext(Downstream.newBuilder().build());
         responseObserver.onCompleted();

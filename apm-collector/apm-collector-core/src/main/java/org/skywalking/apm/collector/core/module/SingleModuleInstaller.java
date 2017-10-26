@@ -48,6 +48,12 @@ public abstract class SingleModuleInstaller extends CommonModuleInstaller {
         this.serverHolder = serverHolder;
     }
 
+    /**
+     * 基于策略模式根据配置文件或默认配置查找生效的MODULE
+     * @throws DefineException
+     * @throws ConfigException
+     * @throws ServerException
+     */
     @Override public final void preInstall() throws DefineException, ConfigException, ServerException {
         logger.info("install module group: {}", groupName());
         Map<String, Map> moduleConfig = getModuleConfig();
@@ -56,7 +62,7 @@ public abstract class SingleModuleInstaller extends CommonModuleInstaller {
             if (moduleConfig.size() > 1) {
                 throw new ClusterModuleException("single module, but configure multiple modules");
             }
-
+            //找到该GROUP对应的配置参数
             Map.Entry<String, Map> configEntry = moduleConfig.entrySet().iterator().next();
             if (moduleDefineMap.containsKey(configEntry.getKey())) {
                 moduleDefine = moduleDefineMap.get(configEntry.getKey());
@@ -71,7 +77,7 @@ public abstract class SingleModuleInstaller extends CommonModuleInstaller {
             boolean hasDefaultModule = false;
             while (moduleDefineIterator.hasNext()) {
                 Map.Entry<String, ModuleDefine> moduleDefineEntry = moduleDefineIterator.next();
-                if (moduleDefineEntry.getValue().defaultModule()) {
+                if (moduleDefineEntry.getValue().defaultModule()) {//判断是否默认处理模块
                     if (hasDefaultModule) {
                         throw new ClusterModuleException("single module, but configure multiple default module");
                     }
@@ -91,7 +97,10 @@ public abstract class SingleModuleInstaller extends CommonModuleInstaller {
             CollectorContextHelper.INSTANCE.putContext(moduleContext());
         }
         moduleDefine.initializeOtherContext();
-
+        /**
+         *org.skywalking.apm.collector.storage.elasticsearch.StorageElasticSearchModuleDefine
+         *org.skywalking.apm.collector.stream.grpc.StreamGRPCModuleDefine   StreamGRPCModuleRegistration
+         */
         if (moduleDefine instanceof ClusterDataListenerDefine) {
             ClusterDataListenerDefine listenerDefine = (ClusterDataListenerDefine)moduleDefine;
             if (ObjectUtils.isNotEmpty(listenerDefine.listener()) && ObjectUtils.isNotEmpty(moduleDefine.registration())) {

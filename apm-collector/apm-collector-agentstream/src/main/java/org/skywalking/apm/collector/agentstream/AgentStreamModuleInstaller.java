@@ -46,6 +46,10 @@ public class AgentStreamModuleInstaller extends MultipleModuleInstaller {
 
     @Override public void install() throws DefineException, ConfigException, ServerException, ClientException {
         super.install();
+        /**
+         * PersistenceTimer的作用是每3秒将每个存储在worker的数据刷到Storage
+         * PersistenceWorkerContainer.INSTANCE.addWorker()
+         */
         new PersistenceTimer().start();
     }
 }

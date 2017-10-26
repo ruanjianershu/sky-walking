@@ -48,6 +48,16 @@ public class ClusterModuleInstaller extends SingleModuleInstaller {
     }
 
     @Override public void onAfterInstall() throws CollectorException {
+        /**
+         * 启动collector节点上下线监听
+         * 注册监听的有:
+         * AgentStreamJettyDataListener  方法体无逻辑
+         * AgentStreamGRPCDataListener  方法体无逻辑
+         * UIJettyDataListener  方法体无逻辑
+         * AgentServerJettyDataListener  方法体无逻辑
+         * StreamGRPCDataListener 建立本地worker和远程worker集群用于消费agent端消息
+         * 在SingleModuleInstaller.install中注册
+         */
         ((ClusterModuleDefine)getModuleDefine()).startMonitor();
     }
 }

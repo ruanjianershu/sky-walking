@@ -53,6 +53,9 @@ public class DefinitionLoader<D> implements Iterable<D> {
 
     @Override public final Iterator<D> iterator() {
         logger.info("load definition file: {}", definitionFile.get());
+        /**
+         * 拿到所有definitionFile.get()指定的文件
+         */
         List<String> definitionList = new LinkedList<>();
         try {
             Enumeration<URL> urlEnumeration = this.getClass().getClassLoader().getResources(definitionFile.get());
@@ -74,7 +77,9 @@ public class DefinitionLoader<D> implements Iterable<D> {
         }
 
         Iterator<String> moduleDefineIterator = definitionList.iterator();
-
+        /**
+         * 返回实例化后的<D>实现
+         */
         return new Iterator<D>() {
             @Override public boolean hasNext() {
                 return moduleDefineIterator.hasNext();

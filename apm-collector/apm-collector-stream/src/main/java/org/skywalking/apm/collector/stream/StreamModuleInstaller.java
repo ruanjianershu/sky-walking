@@ -55,6 +55,12 @@ public class StreamModuleInstaller extends SingleModuleInstaller {
         return dependenceModules;
     }
 
+    /**
+     * 关联客户端样本信息处理worker
+     * apm-collector-stream初始化入口
+     * 被cluster组依赖
+     * @throws DefineException
+     */
     @Override public void onAfterInstall() throws DefineException {
         initializeWorker((StreamModuleContext)CollectorContextHelper.INSTANCE.getContext(groupName()));
     }
@@ -62,20 +68,31 @@ public class StreamModuleInstaller extends SingleModuleInstaller {
     private void initializeWorker(StreamModuleContext context) throws DefineException {
         ClusterWorkerContext clusterWorkerContext = new ClusterWorkerContext();
         context.setClusterWorkerContext(clusterWorkerContext);
-
+        /**
+         * 读取本地持久化stream worker
+         * locate_worker_provider.define
+         */
         LocalAsyncWorkerProviderDefineLoader localAsyncProviderLoader = new LocalAsyncWorkerProviderDefineLoader();
+        /**
+         * 读取远程持久化stream worker
+         * remote_worker_provider.define
+         */
         RemoteWorkerProviderDefineLoader remoteProviderLoader = new RemoteWorkerProviderDefineLoader();
         try {
             List<AbstractLocalAsyncWorkerProvider> localAsyncProviders = localAsyncProviderLoader.load();
             for (AbstractLocalAsyncWorkerProvider provider : localAsyncProviders) {
                 provider.setClusterContext(clusterWorkerContext);
+                //给worker绑定队列
                 provider.create();
+                //指定worker均衡负载规则、数据规则
                 clusterWorkerContext.putRole(provider.role());
             }
 
             List<AbstractRemoteWorkerProvider> remoteProviders = remoteProviderLoader.load();
             for (AbstractRemoteWorkerProvider provider : remoteProviders) {
+                //绑定到上下文
                 provider.setClusterContext(clusterWorkerContext);
+                //将worker添加到context
                 clusterWorkerContext.putRole(provider.role());
                 clusterWorkerContext.putProvider(provider);
             }

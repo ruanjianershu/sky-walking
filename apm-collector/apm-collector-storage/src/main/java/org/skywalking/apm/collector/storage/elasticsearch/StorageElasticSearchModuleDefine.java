@@ -63,11 +63,21 @@ public class StorageElasticSearchModuleDefine extends StorageModuleDefine {
     }
 
     @Override public void injectClientIntoDAO(Client client) throws DefineException {
+        /**
+         * 各个模块涉及到对ElasticSearch的读写对象的实例化
+         * apm-collector/apm-collector-agentjvm/src/main/resources/META-INF/defines/es_dao.define
+         * apm-collector/apm-collector-agentregister/src/main/resources/META-INF/defines/es_dao.define
+         * apm-collector/apm-collector-agentstream/src/main/resources/META-INF/defines/es_dao.define
+         * apm-collector/apm-collector-storage/src/main/resources/META-INF/defines/es_dao.define
+         * apm-collector/apm-collector-ui/src/main/resources/META-INF/defines/es_dao.define
+         */
         EsDAODefineLoader loader = new EsDAODefineLoader();
         List<EsDAO> esDAOs = loader.load();
         esDAOs.forEach(esDAO -> {
             esDAO.setClient((ElasticSearchClient)client);
+            //获得该DAO的接口名
             String interFaceName = esDAO.getClass().getInterfaces()[0].getName();
+            //将DAO实例和接口名形成映射关系，在需要的时候通过接口名获得实例对象。DAOContainer相当于控制反转容器
             DAOContainer.INSTANCE.put(interFaceName, esDAO);
         });
     }

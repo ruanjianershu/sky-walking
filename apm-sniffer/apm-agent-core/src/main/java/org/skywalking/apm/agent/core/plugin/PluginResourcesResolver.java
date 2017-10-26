@@ -54,6 +54,9 @@ public class PluginResourcesResolver {
         }
         return null;
     }
+    public static void main(String[] s){
+        new PluginResourcesResolver().getResources();
+    }
 
     /**
      * Get the classloader.

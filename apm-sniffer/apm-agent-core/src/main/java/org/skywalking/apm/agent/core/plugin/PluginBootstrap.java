@@ -43,7 +43,7 @@ public class PluginBootstrap {
      */
     public List<AbstractClassEnhancePluginDefine> loadPlugins() throws AgentPackageNotFoundException {
         AgentClassLoader.initDefaultLoader();
-
+        //获取所有名叫skywalking-plugin.def的文件
         PluginResourcesResolver resolver = new PluginResourcesResolver();
         List<URL> resources = resolver.getResources();
 
@@ -51,6 +51,11 @@ public class PluginBootstrap {
             logger.info("no plugin files (skywalking-plugin.def) found, continue to start application.");
             return new ArrayList<AbstractClassEnhancePluginDefine>();
         }
+        /**
+         * 从skywalking-plugin.def通过InputStream读取插件列表，
+         * 根据插件名字是否以"[OFF]"开头、是否配置Config.Plugin.DISABLED_PLUGINS
+         * 确定插件是否启用
+         */
 
         for (URL pluginUrl : resources) {
             try {
@@ -61,7 +66,7 @@ public class PluginBootstrap {
         }
 
         List<PluginDefine> pluginClassList = PluginCfg.INSTANCE.getPluginClassList();
-
+        //实例化插件对象
         List<AbstractClassEnhancePluginDefine> plugins = new ArrayList<AbstractClassEnhancePluginDefine>();
         for (PluginDefine pluginDefine : pluginClassList) {
             try {
