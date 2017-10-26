@@ -64,7 +64,10 @@ public class SamplingService implements BootService {
 
     @Override
     public void shutdown() throws Throwable {
-        scheduledFuture.cancel(true);
+        //when Config.Agent.SAMPLE_N_PER_3_SECS<0,scheduledFuture will be null.
+        if (null != scheduledFuture) {
+            scheduledFuture.cancel(true);
+        }
     }
 
     /**
