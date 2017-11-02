@@ -1,4 +1,4 @@
-package org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc;
+package org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.automatic;
 
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,6 +33,21 @@ public class MDCConverterActivation extends ClassInstanceMethodsEnhancePluginDef
                 @Override
                 public String getMethodsInterceptor() {
                     return "org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.PrintMDCTraceIdInterceptor";
+                }
+
+                @Override public boolean isOverrideArgs() {
+                    return false;
+                }
+            },
+            new InstanceMethodsInterceptPoint() {
+                @Override
+                public ElementMatcher<MethodDescription> getMethodsMatcher() {
+                    return named("start");
+                }
+
+                @Override
+                public String getMethodsInterceptor() {
+                    return "org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.MDCKeyInterceptor";
                 }
 
                 @Override public boolean isOverrideArgs() {
