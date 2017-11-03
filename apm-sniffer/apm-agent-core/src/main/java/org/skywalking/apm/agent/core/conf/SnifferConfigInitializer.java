@@ -57,7 +57,8 @@ public class SnifferConfigInitializer {
         InputStream configFileStream;
 
         try {
-            configFileStream = loadConfigFromAgentFolder();
+            configFileStream = loadConfigFromProperty();
+            if (null == configFileStream) configFileStream = loadConfigFromAgentFolder();
             Properties properties = new Properties();
             properties.load(configFileStream);
             ConfigInitializer.initialize(properties, Config.class);
@@ -130,5 +131,26 @@ public class SnifferConfigInitializer {
             }
         }
         throw new ConfigNotFoundException("Fail to load agent config file.");
+    }
+
+    private static InputStream loadConfigFromProperty() {
+        String config = System.getProperty("agent.config");
+        if (StringUtil.isEmpty(config)) {
+            return null;
+        }
+        File configFile = new File(config);
+        if (configFile.exists() && configFile.isDirectory()) {
+            logger.info("check {} in path {}, according system property.", CONFIG_FILE_NAME, config);
+            configFile = new File(config, CONFIG_FILE_NAME);
+        }
+        if (configFile.exists() && configFile.isFile()) {
+            try {
+                logger.info("found   {}, according system property.", configFile.getAbsolutePath());
+                return new FileInputStream(configFile);
+            } catch (FileNotFoundException e) {
+                logger.error(e, "Fail to load {} , according system property.", config);
+            }
+        }
+        return null;
     }
 }
