@@ -7,6 +7,7 @@ import org.skywalking.apm.agent.core.plugin.interceptor.InstanceMethodsIntercept
 import org.skywalking.apm.agent.core.plugin.interceptor.enhance.ClassInstanceMethodsEnhancePluginDefine;
 import org.skywalking.apm.agent.core.plugin.match.ClassMatch;
 
+import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.skywalking.apm.agent.core.plugin.match.NameMatch.byName;
 
@@ -18,7 +19,19 @@ public class MDCConverterActivation extends ClassInstanceMethodsEnhancePluginDef
 
     @Override
     protected ConstructorInterceptPoint[] getConstructorsInterceptPoints() {
-        return null;
+        return new ConstructorInterceptPoint[] {
+            new ConstructorInterceptPoint() {
+                @Override
+                public ElementMatcher<MethodDescription> getConstructorMatcher() {
+                    return any();
+                }
+
+                @Override
+                public String getConstructorInterceptor() {
+                    return "org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.automatic.MDCConstructorInterceptor";
+                }
+            }
+        };
     }
 
     @Override
@@ -32,7 +45,7 @@ public class MDCConverterActivation extends ClassInstanceMethodsEnhancePluginDef
 
                 @Override
                 public String getMethodsInterceptor() {
-                    return "org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.PrintMDCTraceIdInterceptor";
+                    return "org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.automatic.PrintMDCTraceIdInterceptor";
                 }
 
                 @Override public boolean isOverrideArgs() {
@@ -47,7 +60,7 @@ public class MDCConverterActivation extends ClassInstanceMethodsEnhancePluginDef
 
                 @Override
                 public String getMethodsInterceptor() {
-                    return "org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.MDCKeyInterceptor";
+                    return "org.skywalking.apm.toolkit.activation.log.logback.v1.x.mdc.automatic.MDCKeyInterceptor";
                 }
 
                 @Override public boolean isOverrideArgs() {

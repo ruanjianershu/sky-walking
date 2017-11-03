@@ -19,7 +19,7 @@ public class PrintMDCTraceIdInterceptor implements InstanceMethodsAroundIntercep
     @Override public Object afterMethod(EnhancedInstance objInst, Method method, Object[] allArguments,
         Class<?>[] argumentsTypes, Object ret) throws Throwable {
         Boolean convert4TID = (Boolean) objInst.getSkyWalkingDynamicField();
-        if (convert4TID) {
+        if (null != convert4TID && convert4TID) {
             return ContextManager.getGlobalTraceId();
         }
         return ret;

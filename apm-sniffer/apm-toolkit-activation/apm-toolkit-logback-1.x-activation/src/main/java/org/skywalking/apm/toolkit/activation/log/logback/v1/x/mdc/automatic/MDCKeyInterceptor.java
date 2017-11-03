@@ -21,12 +21,10 @@ public class MDCKeyInterceptor implements InstanceMethodsAroundInterceptor {
     @Override public Object afterMethod(EnhancedInstance objInst, Method method, Object[] allArguments,
         Class<?>[] argumentsTypes, Object ret) throws Throwable {
         MDCConverter converter = (MDCConverter)objInst;
-        Boolean convert4TID = false;
         String[] key = OptionHelper.extractDefaultReplacement(converter.getFirstOption());
         if (null != key && key.length > 0 && Config.Toolkit.LOGBACK_MDC_TRACEID.equals(key[0])) {
-            convert4TID = true;
+            objInst.setSkyWalkingDynamicField(true);
         }
-        objInst.setSkyWalkingDynamicField(convert4TID);
         return ret;
     }
 
