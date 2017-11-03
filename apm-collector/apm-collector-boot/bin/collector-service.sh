@@ -5,6 +5,7 @@ PRGDIR=`dirname "$PRG"`
 [ -z "$COLLECTOR_HOME" ] && COLLECTOR_HOME=`cd "$PRGDIR/.." >/dev/null; pwd`
 
 COLLECTOR_LOGS_DIR="${COLLECTOR_HOME}/logs"
+COLLECTOR_DATA_DIR="${COLLECTOR_HOME}/data"
 JAVA_OPTS=" -Xms256M -Xmx512M"
 
 if [ ! -d "${COLLECTOR_HOME}/logs" ]; then
@@ -19,7 +20,7 @@ for i in "$COLLECTOR_HOME"/libs/*.jar
 do
     CLASSPATH="$i:$CLASSPATH"
 done
-COLLECTOR_OPTIONS=" -Dcollector.logDir=$COLLECTOR_LOGS_DIR"
+COLLECTOR_OPTIONS=" -Ddata.path=$COLLECTOR_DATA_DIR -Dcollector.logDir=$COLLECTOR_LOGS_DIR"
 echo "Starting collector...."
 
 eval exec "\"$_RUNJAVA\" ${JAVA_OPTS} ${COLLECTOR_OPTIONS} -classpath $CLASSPATH org.skywalking.apm.collector.boot.CollectorBootStartUp \
