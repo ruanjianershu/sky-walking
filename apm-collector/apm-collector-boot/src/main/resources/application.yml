@@ -1,18 +1,18 @@
-#cluster:
-#  zookeeper:
-#    hostPort: localhost:2181
-#    sessionTimeout: 100000
+cluster:
+  zookeeper:
+    hostPort: 192.168.245.199:2181
+    sessionTimeout: 100000
 agent_server:
   jetty:
-    host: localhost
+    host: 172.16.42.48
     port: 10800
     context_path: /
 agent_stream:
   grpc:
-    host: localhost
+    host: 172.16.42.48
     port: 11800
   jetty:
-    host: localhost
+    host: 172.16.42.48
     port: 12800
     context_path: /
   config:
@@ -20,21 +20,17 @@ agent_stream:
     buffer_segment_max_file_size: 500M
 ui:
   jetty:
-    host: localhost
+    host: 172.16.42.48
     port: 12800
     context_path: /
 collector_inside:
   grpc:
-    host: localhost
+    host: 172.16.42.48
     port: 11800
-#storage:
-#  elasticsearch:
-#    cluster_name: CollectorDBCluster
-#    cluster_transport_sniffer: true
-#    cluster_nodes: localhost:9300
-#    index_shards_number: 2
-#    index_replicas_number: 0
-#storage:
-#  h2:
-#    url: jdbc:h2:tcp://localhost/~/test
-#    user_name: sa
+storage:
+  elasticsearch:
+    cluster_name: skyOnZkevin1
+    cluster_transport_sniffer: true
+    cluster_nodes: 192.168.245.199:9300
+    index_shards_number: 2
+    index_replicas_number: 0
