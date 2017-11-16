@@ -146,7 +146,9 @@ public class GRPCChannelManager implements BootService, Runnable {
                 Status.PERMISSION_DENIED,
                 Status.UNAUTHENTICATED,
                 Status.RESOURCE_EXHAUSTED,
-                Status.UNKNOWN
+                Status.UNKNOWN,
+                //INTERNAL: HTTP/2 error code: INTERNAL_ERROR
+                Status.INTERNAL
             );
         }
         return false;

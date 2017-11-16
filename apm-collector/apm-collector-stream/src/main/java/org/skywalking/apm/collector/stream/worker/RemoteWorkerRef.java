@@ -36,7 +36,7 @@ public class RemoteWorkerRef extends WorkerRef {
     private final Logger logger = LoggerFactory.getLogger(RemoteWorkerRef.class);
 
     private final Boolean acrossJVM;
-    private final RemoteCommonServiceGrpc.RemoteCommonServiceStub stub;
+    private RemoteCommonServiceGrpc.RemoteCommonServiceStub stub;
     private StreamObserver<RemoteMessage> streamObserver;
     private final AbstractRemoteWorker remoteWorker;
     private final String address;
@@ -58,6 +58,21 @@ public class RemoteWorkerRef extends WorkerRef {
         createStreamObserver();
     }
 
+    private void reInitOnRemoteWorkerError(Throwable e) {
+        if (e instanceof IllegalArgumentException) {
+            logger.warn("RemoteWorker error, readjust!");
+            try {
+                String[] address = this.address.split(":");
+                GRPCClient client = new GRPCClient(address[0], Integer.parseInt(address[1]));
+                client.initialize();
+                stub = RemoteCommonServiceGrpc.newStub(client.getChannel());
+                createStreamObserver();
+            } catch (Exception reInitE) {
+                logger.error(reInitE.getMessage(), reInitE);
+            }
+        }
+    }
+
     @Override
     public void tell(Object message) throws WorkerInvokeException {
         if (acrossJVM) {
@@ -66,9 +81,9 @@ public class RemoteWorkerRef extends WorkerRef {
                 RemoteMessage.Builder builder = RemoteMessage.newBuilder();
                 builder.setWorkerRole(getRole().roleName());
                 builder.setRemoteData(remoteData);
-
                 streamObserver.onNext(builder.build());
             } catch (Throwable e) {
+                reInitOnRemoteWorkerError(e);
                 logger.error(e.getMessage(), e);
             }
         } else {
