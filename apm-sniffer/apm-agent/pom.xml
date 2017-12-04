@@ -108,13 +108,13 @@
                         </goals>
                         <configuration>
                             <tasks>
-                                <mkdir dir="${project.basedir}/../../packages/skywalking-agent"/>
+                                <mkdir dir="${project.basedir}/../../packages/apm-agent"/>
                                 <copy file="${project.build.directory}/skywalking-agent.jar"
-                                      tofile="${project.basedir}/../../packages/skywalking-agent/skywalking-agent.jar" overwrite="true"/>
-                                <mkdir dir="${project.basedir}/../../packages/skywalking-agent/config"/>
-                                <mkdir dir="${project.basedir}/../../packages/skywalking-agent/logs"/>
+                                      tofile="${project.basedir}/../../packages/apm-agent/skywalking-agent.jar" overwrite="true"/>
+                                <mkdir dir="${project.basedir}/../../packages/apm-agent/config"/>
+                                <mkdir dir="${project.basedir}/../../packages/apm-agent/logs"/>
                                 <copydir src="${project.basedir}/../config"
-                                         dest="${project.basedir}/../../packages/skywalking-agent/config" forceoverwrite="true"/>
+                                         dest="${project.basedir}/../../packages/apm-agent/config" forceoverwrite="true"/>
                             </tasks>
                         </configuration>
                     </execution>
