@@ -103,8 +103,10 @@ public class GRPCChannelManager implements BootService, Runnable {
                     logger.error(t, "Create channel to {} fail.", server);
                     notify(GRPCChannelStatus.DISCONNECT);
                 }
+            } else {
+                //close connection when Collector.GRPC_SERVERS is empty.
+                notify(GRPCChannelStatus.DISCONNECT);
             }
-
             logger.debug("Selected collector grpc service is not available. Wait {} seconds to retry", Config.Collector.GRPC_CHANNEL_CHECK_INTERVAL);
         }
     }
