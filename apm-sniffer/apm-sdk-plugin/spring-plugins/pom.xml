@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.skywalking</groupId>
         <artifactId>apm-sdk-plugin</artifactId>
-        <version>3.2.5-2017</version>
+        <version>3.2.6-2017</version>
     </parent>
 
     <artifactId>spring-plugins</artifactId>
@@ -36,6 +36,7 @@
         <module>mvc-annotation-3.x-plugin</module>
         <module>mvc-servlet-3.x-4.x-plugin</module>
         <module>core-patch</module>
+        <module>mvc-annotation-commons</module>
     </modules>
     <packaging>pom</packaging>
 
