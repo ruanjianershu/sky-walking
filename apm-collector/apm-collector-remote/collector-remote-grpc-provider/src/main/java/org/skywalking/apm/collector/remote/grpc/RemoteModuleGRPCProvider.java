@@ -28,6 +28,7 @@ public class RemoteModuleGRPCProvider extends ModuleProvider {
     private static final String PORT = "port";
     private static final String CHANNEL_SIZE = "channel_size";
     private static final String BUFFER_SIZE = "buffer_size";
+    private static final String CLUSTER_MODE = "cluster_mode";
 
     private GRPCRemoteSenderService remoteSenderService;
     private CommonRemoteDataRegisterService remoteDataRegisterService;
@@ -45,11 +46,12 @@ public class RemoteModuleGRPCProvider extends ModuleProvider {
         Integer port = (Integer)config.get(PORT);
         Integer channelSize = (Integer)config.getOrDefault(CHANNEL_SIZE, 5);
         Integer bufferSize = (Integer)config.getOrDefault(BUFFER_SIZE, 1000);
-
+        String clusterMode = (String)config.getOrDefault(CLUSTER_MODE, "native");
         remoteDataRegisterService = new CommonRemoteDataRegisterService();
-        remoteSenderService = new GRPCRemoteSenderService(host, port, channelSize, bufferSize, remoteDataRegisterService);
+        remoteSenderService = new GRPCRemoteSenderService(host, port, channelSize, bufferSize, remoteDataRegisterService, clusterMode);
         this.registerServiceImplementation(RemoteSenderService.class, remoteSenderService);
         this.registerServiceImplementation(RemoteDataRegisterService.class, remoteDataRegisterService);
+
     }
 
     @Override public void start(Properties config) throws ServiceNotProvidedException {

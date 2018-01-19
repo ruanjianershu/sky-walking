@@ -100,6 +100,9 @@ public class TraceSegmentServiceClient implements BootService, IConsumer<TraceSe
                         logger.error(throwable, "Send UpstreamSegment to collector fail with a grpc internal exception.");
                     }
                     ServiceManager.INSTANCE.findService(GRPCChannelManager.class).reportError(throwable);
+                    if (ServiceManager.INSTANCE.findService(GRPCChannelManager.class).isNetworkError(throwable)) {
+                        statusChanged(GRPCChannelStatus.DISCONNECT);
+                    }
                 }
 
                 @Override

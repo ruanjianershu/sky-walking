@@ -160,6 +160,9 @@ public class AppAndServiceRegisterClient implements BootService, GRPCChannelList
             } catch (Throwable t) {
                 logger.error(t, "AppAndServiceRegisterClient execute fail.");
                 ServiceManager.INSTANCE.findService(GRPCChannelManager.class).reportError(t);
+                if (ServiceManager.INSTANCE.findService(GRPCChannelManager.class).isNetworkError(t)) {
+                    status = GRPCChannelStatus.DISCONNECT;
+                }
             }
         }
     }

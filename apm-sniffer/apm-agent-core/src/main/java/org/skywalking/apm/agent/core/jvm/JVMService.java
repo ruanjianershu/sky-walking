@@ -131,6 +131,11 @@ public class JVMService implements BootService, Runnable {
                             stub.collect(builder.build());
                         }
                     } catch (Throwable t) {
+                        if (ServiceManager.INSTANCE.findService(GRPCChannelManager.class).isNetworkError(t)) {
+                            logger.error(t, "stop send JVM metrics to Collector fail.");
+                            statusChanged(GRPCChannelStatus.DISCONNECT);
+                        }
+                        ServiceManager.INSTANCE.findService(GRPCChannelManager.class).reportError(t);
                         logger.error(t, "send JVM metrics to Collector fail.");
                     }
                 }

@@ -21,6 +21,8 @@ package org.skywalking.apm.collector.remote.grpc.service;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+
 import org.skywalking.apm.collector.cluster.ClusterModuleListener;
 import org.skywalking.apm.collector.core.UnexpectedException;
 import org.skywalking.apm.collector.core.data.Data;
@@ -40,6 +42,8 @@ import org.skywalking.apm.collector.remote.service.Selector;
 public class GRPCRemoteSenderService extends ClusterModuleListener implements RemoteSenderService {
 
     private static final String PATH = "/" + RemoteModule.NAME + "/" + RemoteModuleGRPCProvider.NAME;
+    private static  final String CLUSTER_MODE_NATIVE = "native";
+    private static  final String CLUSTER_MODE_PROXY = "proxy";
     private final GRPCRemoteClientService service;
     private List<RemoteClient> remoteClients;
     private final String selfAddress;
@@ -48,18 +52,21 @@ public class GRPCRemoteSenderService extends ClusterModuleListener implements Re
     private final RollingSelector rollingSelector;
     private final int channelSize;
     private final int bufferSize;
+    private final String clusterMode;
 
     @Override public Mode send(int graphId, int nodeId, Data data, Selector selector) {
+        //当前可用的Client
+        List<RemoteClient> availableList = remoteClients.stream().filter(c -> c.isAvailable()).collect(Collectors.toList());
         RemoteClient remoteClient;
         switch (selector) {
             case HashCode:
-                remoteClient = hashCodeSelector.select(remoteClients, data);
+                remoteClient = hashCodeSelector.select(availableList, data);
                 return sendToRemoteWhenNotSelf(remoteClient, graphId, nodeId, data);
             case Rolling:
-                remoteClient = rollingSelector.select(remoteClients, data);
+                remoteClient = rollingSelector.select(availableList, data);
                 return sendToRemoteWhenNotSelf(remoteClient, graphId, nodeId, data);
             case ForeverFirst:
-                remoteClient = foreverFirstSelector.select(remoteClients, data);
+                remoteClient = foreverFirstSelector.select(availableList, data);
                 return sendToRemoteWhenNotSelf(remoteClient, graphId, nodeId, data);
         }
         throw new UnexpectedException("Selector not match, Just support hash, rolling, forever first selector.");
@@ -75,7 +82,7 @@ public class GRPCRemoteSenderService extends ClusterModuleListener implements Re
     }
 
     public GRPCRemoteSenderService(String host, int port, int channelSize, int bufferSize,
-        RemoteDataIDGetter remoteDataIDGetter) {
+        RemoteDataIDGetter remoteDataIDGetter, String clusterMode) {
         this.service = new GRPCRemoteClientService(remoteDataIDGetter);
         this.remoteClients = new ArrayList<>();
         this.selfAddress = host + ":" + String.valueOf(port);
@@ -84,6 +91,7 @@ public class GRPCRemoteSenderService extends ClusterModuleListener implements Re
         this.rollingSelector = new RollingSelector();
         this.channelSize = channelSize;
         this.bufferSize = bufferSize;
+        this.clusterMode = clusterMode;
     }
 
     @Override public String path() {
@@ -94,10 +102,15 @@ public class GRPCRemoteSenderService extends ClusterModuleListener implements Re
         List<RemoteClient> newRemoteClients = new ArrayList<>();
         newRemoteClients.addAll(remoteClients);
 
-        String host = serverAddress.split(":")[0];
-        int port = Integer.parseInt(serverAddress.split(":")[1]);
-        RemoteClient remoteClient = service.create(host, port, channelSize, bufferSize);
-        newRemoteClients.add(remoteClient);
+        //代理实现集群模式，仅仅添加本地Client
+        if ((clusterMode.equals(CLUSTER_MODE_PROXY) && serverAddress.equals(selfAddress))
+                || clusterMode.equals(CLUSTER_MODE_NATIVE)) {
+            String host = serverAddress.split(":")[0];
+            int port = Integer.parseInt(serverAddress.split(":")[1]);
+            RemoteClient remoteClient = service.create(host, port, channelSize, bufferSize);
+            remoteClient.startConnectionKeeper(remoteClient.equals(selfAddress));
+            newRemoteClients.add(remoteClient);
+        }
 
         Collections.sort(newRemoteClients);
 
@@ -111,7 +124,10 @@ public class GRPCRemoteSenderService extends ClusterModuleListener implements Re
         for (int i = newRemoteClients.size() - 1; i >= 0; i--) {
             RemoteClient remoteClient = newRemoteClients.get(i);
             if (remoteClient.equals(serverAddress)) {
+                remoteClient.stopConnectionKeeper();
                 newRemoteClients.remove(i);
+                //因为对象含有线程池字段，稳妥起见,标识可以gc。
+                remoteClient = null;
             }
         }
 

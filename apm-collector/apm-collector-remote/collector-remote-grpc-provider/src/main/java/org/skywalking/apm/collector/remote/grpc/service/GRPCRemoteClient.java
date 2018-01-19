@@ -18,8 +18,16 @@
 
 package org.skywalking.apm.collector.remote.grpc.service;
 
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import org.skywalking.apm.collector.client.ClientException;
 import org.skywalking.apm.collector.client.grpc.GRPCClient;
 import org.skywalking.apm.collector.core.data.Data;
 import org.skywalking.apm.collector.remote.grpc.proto.Empty;
@@ -34,6 +42,7 @@ import org.skywalking.apm.commons.datacarrier.consumer.IConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 /**
  * @author peng-yongsheng
  */
@@ -46,7 +55,8 @@ public class GRPCRemoteClient implements RemoteClient {
     private final DataCarrier<RemoteMessage> carrier;
     private final String address;
     private final RemoteDataIDGetter remoteDataIDGetter;
-
+    private final AtomicBoolean available = new AtomicBoolean(true);
+    private final ScheduledExecutorService connectionKeeper = Executors.newSingleThreadScheduledExecutor();
     GRPCRemoteClient(GRPCClient client, RemoteDataIDGetter remoteDataIDGetter, int channelSize, int bufferSize) {
         this.address = client.toString();
         this.client = client;
@@ -55,6 +65,26 @@ public class GRPCRemoteClient implements RemoteClient {
         this.carrier = new DataCarrier<>(channelSize, bufferSize);
         this.carrier.setBufferStrategy(BufferStrategy.BLOCKING);
         this.carrier.consume(new RemoteMessageConsumer(), 1);
+
+    }
+    public void startConnectionKeeper(boolean isLocalClient) {
+        //连接保持守护进程
+        connectionKeeper.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                if (! isAvailable()) {
+                    try {
+                        client.initialize();
+                        available.compareAndSet(false, true);
+                    } catch (ClientException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }, isLocalClient ? 3 : 10, 10, TimeUnit.SECONDS);
+    }
+    public void stopConnectionKeeper() {
+        connectionKeeper.shutdownNow();
     }
 
     @Override public final String getAddress() {
@@ -90,13 +120,15 @@ public class GRPCRemoteClient implements RemoteClient {
         }
 
         @Override public void onError(List<RemoteMessage> remoteMessages, Throwable t) {
+            logger.error("RemoteMessageConsumer consume error {},address:{}", t, address);
+            disableClient(t);
             logger.error(t.getMessage(), t);
         }
 
         @Override public void onExit() {
         }
-    }
 
+    }
     private StreamObserver<RemoteMessage> createStreamObserver() {
         RemoteCommonServiceGrpc.RemoteCommonServiceStub stub = RemoteCommonServiceGrpc.newStub(client.getChannel());
 
@@ -106,7 +138,10 @@ public class GRPCRemoteClient implements RemoteClient {
             }
 
             @Override public void onError(Throwable throwable) {
-                logger.error(throwable.getMessage(), throwable);
+                //zookeeper监听到达快于socket端口建立，当集群中其他collector获得到事件创建channel时，很可能socketServer还未建立
+                //其他集群节点退出后本地节点分配给他的样本信息无法消费
+                logger.error("createStreamObserver失败,error:{},address:{}",throwable.getMessage(), address, throwable);
+                disableClient(throwable);
             }
 
             @Override public void onCompleted() {
@@ -115,6 +150,15 @@ public class GRPCRemoteClient implements RemoteClient {
         });
     }
 
+    /**
+     * 不再接收新的请求
+     * @param t
+     */
+    private void disableClient(Throwable t) {
+        if (! isUnAvailable(t)) {
+            available.compareAndSet(true, false);
+        }
+    }
     class StreamStatus {
 
         private final Logger logger = LoggerFactory.getLogger(StreamStatus.class);
@@ -165,7 +209,39 @@ public class GRPCRemoteClient implements RemoteClient {
         return this.address.equals(address);
     }
 
+    @Override
+    public boolean isAvailable() {
+        return available.get() && null != client.getChannel() && ! client.getChannel().isShutdown();
+    }
+
+
     @Override public int compareTo(RemoteClient o) {
         return this.address.compareTo(o.getAddress());
     }
+
+    private boolean isUnAvailable(Throwable t) {
+        boolean clientError = false;
+        if (t instanceof StatusRuntimeException) {
+            StatusRuntimeException statusRuntimeException = (StatusRuntimeException)t;
+            clientError = statusEquals(statusRuntimeException.getStatus(),
+                    Status.UNAVAILABLE,
+                    Status.PERMISSION_DENIED,
+                    Status.UNAUTHENTICATED,
+                    Status.RESOURCE_EXHAUSTED,
+                    Status.UNKNOWN,
+                    //INTERNAL: HTTP/2 error code: INTERNAL_ERROR
+                    Status.INTERNAL
+            );
+        }
+        return clientError;
+    }
+    private boolean statusEquals(Status sourceStatus, Status... potentialStatus) {
+        for (Status status : potentialStatus) {
+            if (sourceStatus.getCode() == status.getCode()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

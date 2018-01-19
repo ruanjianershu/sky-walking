@@ -59,16 +59,21 @@ public class ElasticSearchClient implements Client {
     private final Boolean clusterTransportSniffer;
 
     private final String clusterNodes;
+    private final String pingTimeout;
+    private final String nodesSamplerInterval = "5s";
 
-    public ElasticSearchClient(String clusterName, Boolean clusterTransportSniffer, String clusterNodes) {
+    public ElasticSearchClient(String clusterName, Boolean clusterTransportSniffer, String clusterNodes, String pingTimeout) {
         this.clusterName = clusterName;
         this.clusterTransportSniffer = clusterTransportSniffer;
         this.clusterNodes = clusterNodes;
+        this.pingTimeout = pingTimeout;
     }
 
     @Override public void initialize() throws ClientException {
         Settings settings = Settings.builder()
             .put("cluster.name", clusterName)
+                .put("client.transport.ping_timeout", pingTimeout)
+                .put("client.transport.nodes_sampler_interval", nodesSamplerInterval)
             .put("client.transport.sniff", clusterTransportSniffer)
             .build();
 

@@ -11,6 +11,7 @@ remote:
   gRPC:
     host: localhost
     port: 11800
+    cluster_mode: native
 agent_gRPC:
   gRPC:
     host: localhost
@@ -38,3 +39,4 @@ ui:
 #    index_shards_number: 2
 #    index_replicas_number: 0
 #    ttl: 7
+#    ping_timeout: 60s

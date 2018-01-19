@@ -140,7 +140,7 @@ public class GRPCChannelManager implements BootService, Runnable {
         }
     }
 
-    private boolean isNetworkError(Throwable throwable) {
+    public boolean isNetworkError(Throwable throwable) {
         if (throwable instanceof StatusRuntimeException) {
             StatusRuntimeException statusRuntimeException = (StatusRuntimeException)throwable;
             return statusEquals(statusRuntimeException.getStatus(),

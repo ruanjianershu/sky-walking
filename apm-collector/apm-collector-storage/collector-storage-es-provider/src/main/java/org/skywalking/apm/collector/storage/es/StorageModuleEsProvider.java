@@ -118,6 +118,7 @@ public class StorageModuleEsProvider extends ModuleProvider {
     private static final String INDEX_SHARDS_NUMBER = "index_shards_number";
     private static final String INDEX_REPLICAS_NUMBER = "index_replicas_number";
     private static final String TIME_TO_LIVE_OF_DATA = "ttl";
+    private static final String  PING_TIMEOUT = "ping_timeout";
 
     private ElasticSearchClient elasticSearchClient;
     private DataTTLKeeperTimer deleteTimer;
@@ -134,7 +135,9 @@ public class StorageModuleEsProvider extends ModuleProvider {
         String clusterName = config.getProperty(CLUSTER_NAME);
         Boolean clusterTransportSniffer = (Boolean)config.get(CLUSTER_TRANSPORT_SNIFFER);
         String clusterNodes = config.getProperty(CLUSTER_NODES);
-        elasticSearchClient = new ElasticSearchClient(clusterName, clusterTransportSniffer, clusterNodes);
+
+        String pingTimeout = config.getProperty(PING_TIMEOUT, "60s");
+        elasticSearchClient = new ElasticSearchClient(clusterName, clusterTransportSniffer, clusterNodes, pingTimeout);
 
         this.registerServiceImplementation(IBatchDAO.class, new BatchEsDAO(elasticSearchClient));
         registerCacheDAO();

@@ -29,4 +29,12 @@ public interface RemoteClient extends Comparable<RemoteClient> {
     void push(int graphId, int nodeId, Data data);
 
     boolean equals(String address);
+    boolean isAvailable();
+
+    default void startConnectionKeeper(boolean isLocalClient) {
+
+    }
+    default void stopConnectionKeeper() {
+
+    }
 }
